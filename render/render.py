@@ -108,7 +108,7 @@ class RenderHelper:
         # calDict = {'events': eventList, 'calStartDate': calStartDate, 'today': currDate, 'lastRefresh': currDatetime, 'batteryLevel': batteryLevel}
         # first setup list to represent the 5 weeks in our calendar
         calList = []
-        for i in range(35):
+        for i in range(2):
             calList.append([])
 
         # retrieve calendar configuration
@@ -122,59 +122,29 @@ class RenderHelper:
         for event in calDict['events']:
             idx = self.get_day_in_cal(calDict['calStartDate'], event['startDatetime'].date())
             if idx >= 0:
-                calList[idx].append(event)
+                if idx < len(calList):
+                    calList[idx].append(event)
             if event['isMultiday']:
                 idx = self.get_day_in_cal(calDict['calStartDate'], event['endDatetime'].date())
                 if idx < len(calList):
                     calList[idx].append(event)
 
-        # Read html template
-        with open(self.currPath + '/calendar_template.html', 'r') as file:
-            calendar_template = file.read()
-
         # Insert month header
         month_name = str(calDict['today'].month)
 
-        # Insert battery icon
-        # batteryDisplayMode - 0: do not show / 1: always show / 2: show when battery is low
-        battLevel = calDict['batteryLevel']
-
-        if batteryDisplayMode == 0:
-            battText = 'batteryHide'
-        elif batteryDisplayMode == 1:
-            if battLevel >= 80:
-                battText = 'battery80'
-            elif battLevel >= 60:
-                battText = 'battery60'
-            elif battLevel >= 40:
-                battText = 'battery40'
-            elif battLevel >= 20:
-                battText = 'battery20'
-            else:
-                battText = 'battery0'
-
-        elif batteryDisplayMode == 2 and battLevel < 20.0:
-            battText = 'battery0'
-        elif batteryDisplayMode == 2 and battLevel >= 20.0:
-            battText = 'batteryHide'
-
         # Populate the day of week row
         cal_days_of_week = ''
-        for i in range(0, 7):
-            cal_days_of_week += '<li class="font-weight-bold text-uppercase">' + dayOfWeekText[
-                (i + weekStartDay) % 7] + "</li>\n"
 
         # Populate the date and events
         cal_events_text = ''
         for i in range(len(calList)):
             currDate = calDict['calStartDate'] + timedelta(days=i)
             dayOfMonth = currDate.day
-            if currDate == calDict['today']:
-                cal_events_text += '<li><div class="datecircle">' + str(dayOfMonth) + '</div>\n'
-            elif currDate.month != calDict['today'].month:
-                cal_events_text += '<li><div class="date text-muted">' + str(dayOfMonth) + '</div>\n'
-            else:
-                cal_events_text += '<li><div class="date">' + str(dayOfMonth) + '</div>\n'
+            class_today = ''
+            if calDict['today'] == currDate:
+                class_today = ' today';
+            cal_days_of_week += '<li class="cell bl day-title' + class_today + '">' + dayOfWeekText[currDate.weekday()] + " " + str(dayOfMonth) + "</li>\n"
+            cal_events_text += '<li class="cell bl event-list">'
 
             for j in range(min(len(calList[i]), maxEventsPerDay)):
                 event = calList[i][j]
@@ -200,9 +170,13 @@ class RenderHelper:
 
             cal_events_text += '</li>\n'
 
+        # Read html template
+        with open(self.currPath + '/calendar_template.html', 'r') as file:
+            calendar_template = file.read()
+
         # Append the bottom and write the file
         htmlFile = open(self.currPath + '/calendar.html', "w")
-        htmlFile.write(calendar_template.format(month=month_name, battText=battText, dayOfWeek=cal_days_of_week,
+        htmlFile.write(calendar_template.format(dayOfWeek=cal_days_of_week,
                                                 events=cal_events_text))
         htmlFile.close()
 

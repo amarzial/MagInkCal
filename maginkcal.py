@@ -60,8 +60,8 @@ def main():
         currDatetime = dt.datetime.now(displayTZ)
         logger.info("Time synchronised to {}".format(currDatetime))
         currDate = currDatetime.date()
-        calStartDate = currDate - dt.timedelta(days=((currDate.weekday() + (7 - weekStartDay)) % 7))
-        calEndDate = calStartDate + dt.timedelta(days=(5 * 7 - 1))
+        calStartDate = currDate
+        calEndDate = calStartDate + dt.timedelta(days=4)
         calStartDatetime = displayTZ.localize(dt.datetime.combine(calStartDate, dt.datetime.min.time()))
         calEndDatetime = displayTZ.localize(dt.datetime.combine(calEndDate, dt.datetime.max.time()))
 
